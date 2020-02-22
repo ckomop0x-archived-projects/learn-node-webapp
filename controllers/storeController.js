@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 const Store = mongoose.model('Store');
+const multer = require('multer');
+const jimp = require('jimp');
+const uuid = require('uuid');
+
+const multerOptions = {
+  storage: multer.memoryStorage(),
+  fileFilter(req, file, next) {
+    const isPhoto = file.mimetype.startsWith('image');
+
+    if (isPhoto) {
+      next(null, true);
+    } else {
+      next({ message: "That filetype ism't allowed!" }, false);
+    }
+  },
+};
 
 exports.homePage = (req, res) => {
   res.render('index', {
@@ -11,6 +27,27 @@ exports.addStore = (req, res) => {
   res.render('editStore', {
     title: 'Add Store',
   });
+};
+
+exports.upload = multer(multerOptions).single('photo');
+
+exports.resize = async (req, res, next) => {
+  // if there is no new file to resize
+  if (!req.file) {
+    next(); // skip to the next middleware
+    return;
+  }
+
+  const extension = req.file.mimetype.split('/')[1];
+  req.body.photo = `${uuid.v4()}.${extension}`;
+
+  // now we resize
+  const photo = await jimp.read(req.file.buffer);
+  await photo.resize(800, jimp.AUTO);
+  await photo.write(`./public/uploads/${req.body.photo}`);
+
+  // once we have written our photo to disk, keep going
+  next();
 };
 
 exports.createStore = async (req, res) => {
@@ -30,20 +67,26 @@ exports.getStores = async (req, res) => {
 
 exports.editStore = async (req, res) => {
   // 1. Find the store with the given id
-  const store = await Store.findOne({ _id: req.params.id })
+  const store = await Store.findOne({ _id: req.params.id });
   // 2. Confirm the store owner
   // TODO:
   // 3. Render the edit form so the user can update the store
-  res.render('editStore', { title: `Edit ${store.name}`, store })
+  res.render('editStore', { title: `Edit ${store.name}`, store });
 };
 
 exports.updateStore = async (req, res) => {
+  // 0. Set the location data to be a point
+  // req.body.location.type = 'Point';
+
   // 1. Find and update the store
   const store = await Store.findOneAndUpdate({ _id: req.params.id }, req.body, {
     new: true,
-    runValidators: true
-  }).exec()
-  req.flash('success', `Successfully updated <b>${store.name}</b>. <a href=/stores/${store.slug}>Visit the store →</a>`)
+    runValidators: true,
+  }).exec();
+  req.flash(
+    'success',
+    `Successfully updated <b>${store.name}</b>. <a href=/stores/${store.slug}>Visit the store →</a>`
+  );
   // 2. Redirect to the store and show that store is updated
-  res.redirect(`/stores/${store._id}/edit`)
-}
+  res.redirect(`/stores/${store._id}/edit`);
+};
