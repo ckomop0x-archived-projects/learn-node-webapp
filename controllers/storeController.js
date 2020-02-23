@@ -65,6 +65,17 @@ exports.getStores = async (req, res) => {
   res.render('stores', { title: 'Stores', stores });
 };
 
+exports.getStoreBySlug = async (req, res, next) => {
+  // 1. Find store in database
+  const store = await Store.findOne({ slug: req.params.slug });
+  if (!store) {
+    next();
+    return;
+  }
+  // 2. Render store
+  res.render('store', { title: store.name, store });
+};
+
 exports.editStore = async (req, res) => {
   // 1. Find the store with the given id
   const store = await Store.findOne({ _id: req.params.id });
@@ -89,4 +100,10 @@ exports.updateStore = async (req, res) => {
   );
   // 2. Redirect to the store and show that store is updated
   res.redirect(`/stores/${store._id}/edit`);
+};
+
+exports.getStoresByTag = async (req, res) => {
+  const tags = await Store.getTagsList();
+  const tag = req.params.tag;
+  res.render('tags', { tags, title: 'Tags', tag });
 };
