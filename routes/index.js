@@ -26,26 +26,31 @@ router.post(
   catchErrors(storeController.updateStore)
 );
 
-// All stores page
+// Store
 router.get('/stores', catchErrors(storeController.getStores));
-
-// All stores page
 router.get('/store/:slug', catchErrors(storeController.getStoreBySlug));
-
-// Edit store page
 router.get('/stores/:id/edit', catchErrors(storeController.editStore));
 
-// Tags page
+// Tags
 router.get('/tags', catchErrors(storeController.getStoresByTag));
 router.get('/tags/:tag', catchErrors(storeController.getStoresByTag));
 
-// User flow
+// User
 router.get('/login', userController.loginForm);
 router.post('/login', authController.login);
 router.get('/register', userController.registerForm);
 router.get('/logout', authController.logout);
+
+// Account
 router.get('/account', authController.isLoggedIn, userController.account);
 router.post('/account', catchErrors(userController.updateAccount));
+router.post('/account/forgot', catchErrors(authController.forgot));
+router.get('/account/reset/:token', catchErrors(authController.reset));
+router.post(
+  '/account/reset/:token',
+  authController.confirmedPasswords,
+  catchErrors(authController.update)
+);
 
 // 1. Validate registration data
 // 2. register the user
