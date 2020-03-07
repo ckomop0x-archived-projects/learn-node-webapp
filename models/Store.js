@@ -35,6 +35,11 @@ const storeSchema = new mongoose.Schema({
     },
   },
   photo: String,
+  author: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: 'You must supply an author',
+  },
 });
 
 storeSchema.pre('save', async function(next) {
@@ -60,7 +65,7 @@ storeSchema.statics.getTagsList = function() {
   return this.aggregate([
     { $unwind: '$tags' },
     { $group: { _id: '$tags', count: { $sum: 1 } } },
-    { $sort: { count: -1 } }
+    { $sort: { count: -1 } },
   ]);
 };
 
