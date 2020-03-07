@@ -62,4 +62,9 @@ router.post(
   authController.login
 );
 
+/**
+ * API
+ */
+router.get('/api/search', catchErrors(storeController.searchStores));
+
 module.exports = router;
