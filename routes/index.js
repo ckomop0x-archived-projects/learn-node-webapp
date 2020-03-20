@@ -30,6 +30,10 @@ router.post(
 router.get('/stores', catchErrors(storeController.getStores));
 router.get('/store/:slug', catchErrors(storeController.getStoreBySlug));
 router.get('/stores/:id/edit', catchErrors(storeController.editStore));
+// Map with stores
+router.get('/map', storeController.mapPage);
+router.get('/hearts', authController.isLoggedIn, catchErrors(storeController.heartsPage));
+
 
 // Tags
 router.get('/tags', catchErrors(storeController.getStoresByTag));
@@ -62,7 +66,6 @@ router.post(
   authController.login
 );
 
-router.get('/map', storeController.mapPage);
 
 /**
  * API
