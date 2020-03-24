@@ -1,42 +1,8 @@
 {
   "version": 2,
   "env": {
-    "DATABASE": "@my-mongodb-uri"
+    "DATABASE": "@my-mongodb-uri",
+    "NODE_ENV": "production"
   },
-  "builds": [{ "src": "server.js", "use": "@now/node-server" }],
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/server.js",
-      "methods": ["GET"]
-    },
-    {
-      "src": "/add",
-      "dest": "/server.js",
-      "methods": ["GET"]
-    },
-    {
-      "src": "/add",
-      "dest": "/server.js",
-      "methods": ["POST"]
-    },
-    {
-      "src": "/add/:id",
-      "dest": "/server.js",
-      "methods": ["POST"]
-    },
-
-
-    {
-      "src": "/stores",
-      "dest": "/server.js",
-      "methods": ["GET"]
-    },
-    {
-      "src": "/stores/page/:page",
-      "dest": "/server.js",
-      "methods": ["GET"]
-    }
-
-  ]
+  "builds": [{ "src": "/start.js", "use": "@now/node-server" }]
 }
