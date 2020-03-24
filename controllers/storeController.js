@@ -63,14 +63,14 @@ exports.createStore = async (req, res) => {
 
 exports.getStores = async (req, res) => {
   // 1. List database for list of all stores
-  const stores = await Store.find({});
+  const stores = await Store.find();
   res.render('stores', { title: 'Stores', stores });
 };
 
 exports.getStoreBySlug = async (req, res, next) => {
   // 1. Find store in database
   const store = await Store.findOne({ slug: req.params.slug }).populate(
-    'author'
+    'author reviews'
   );
   if (!store) {
     next();
@@ -176,4 +176,14 @@ exports.heartStore = async (req, res) => {
     { new: true }
   );
   res.json(user);
+};
+
+exports.heartsPage = async (req, res) => {
+  const stores = await Store.find({ _id: { $in: req.user.hearts } });
+  res.render('stores', { title: 'Hearted stores', stores });
+};
+
+exports.getTopStores = async (req, res) => {
+  const stores = await Store.getTopStores();
+  res.render('topStores', { stores, title: '★ Top Stores!' });
 };

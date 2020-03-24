@@ -2,45 +2,51 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 const slug = require('slugs');
 
-const storeSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    trim: true,
-    required: 'Please enter a store name!',
-  },
-  slug: String,
-  description: {
-    type: String,
-    trim: true,
-  },
-  tags: [String],
-  createdAt: {
-    type: Date,
-    default: Date.now(),
-  },
-  location: {
-    type: {
+const storeSchema = new mongoose.Schema(
+  {
+    name: {
       type: String,
-      default: 'Point',
+      trim: true,
+      required: 'Please enter a store name!',
     },
-    coordinates: [
-      {
-        type: Number,
-        required: 'You must supply coordinates',
+    slug: String,
+    description: {
+      type: String,
+      trim: true,
+    },
+    tags: [String],
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+    },
+    location: {
+      type: {
+        type: String,
+        default: 'Point',
       },
-    ],
-    address: {
-      type: String,
-      required: 'You must supply an address',
+      coordinates: [
+        {
+          type: Number,
+          required: 'You must supply coordinates',
+        },
+      ],
+      address: {
+        type: String,
+        required: 'You must supply an address',
+      },
+    },
+    photo: String,
+    author: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: 'You must supply an author',
     },
   },
-  photo: String,
-  author: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: 'You must supply an author',
-  },
-});
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
 storeSchema.index({
   name: 'text',
@@ -77,5 +83,52 @@ storeSchema.statics.getTagsList = function() {
     { $sort: { count: -1 } },
   ]);
 };
+
+storeSchema.statics.getTopStores = function() {
+  return this.aggregate([
+    // Lookup Stores and populate their reviews
+    {
+      $lookup: {
+        from: 'reviews',
+        localField: '_id',
+        foreignField: 'store',
+        as: 'reviews',
+      },
+    },
+    // filter for only 2 items that have 2+ stars
+    { $match: { 'reviews.1': { $exists: true } } },
+    // Add the average reviews field
+    {
+      $project: {
+        photo: '$$ROOT.photo',
+        name: '$$ROOT.name',
+        reviews: '$$ROOT.reviews',
+        slug: '$$ROOT.slug',
+        averageRating: {
+          $avg: '$reviews.rating',
+        },
+      },
+    },
+    // sort it by our new field, highest reviews first
+    { $sort: { averageRating: -1 } },
+    // limit to at most 10
+    { $limit: 10 },
+  ]);
+};
+
+// Find reviews where the store _id === review store property
+storeSchema.virtual('reviews', {
+  ref: 'Review', // What model to link?
+  localField: '_id', // Which field on the review ?
+  foreignField: 'store', // Which field on the store ?
+});
+
+function autopopulate(next) {
+  this.populate('reviews');
+  next();
+}
+
+storeSchema.pre('find', autopopulate);
+storeSchema.pre('findOne', autopopulate);
 
 module.exports = mongoose.model('Store', storeSchema);
