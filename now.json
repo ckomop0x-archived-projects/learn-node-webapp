@@ -4,5 +4,12 @@
     "DATABASE": "@my-mongodb-uri",
     "NODE_ENV": "production"
   },
-  "builds": [{ "src": "/", "use": "@now/node-server" }]
+  "builds": [{ "src": "/start.js", "use": "@now/node-server" }],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/start.js",
+      "methods": ["GET"]
+    }
+  ]
 }
