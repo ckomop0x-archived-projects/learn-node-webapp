@@ -207,3 +207,9 @@ Temporary Items
 
 .idea
 variables.env
+variables.env.now
+
+# from Wes Bos
+haters/
+
+.now
